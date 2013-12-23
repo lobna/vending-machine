@@ -119,7 +119,7 @@ class VendingMachine
        return false
       end
     end
-
+    true
   end
 
   def get_piece(index)
@@ -129,7 +129,7 @@ class VendingMachine
   end 
 
   def get_changes(return_value)
-    
+
     @current_transaction.returned_money = [] 
     @changes.reverse.each do |x|
       next if x.count < 1  #bypass the finished changes
