@@ -1,7 +1,7 @@
 $products = [
   { name: 'Pepsi',
     price: 5.0,
-    count: 2
+    count: 20
   },
   { name: '7Up',
     price: 5.0,
@@ -29,7 +29,7 @@ $products = [
   },
 ]
 
-changes = [
+$changes = [
   { value: 1.0,
     count: 200,
     unit: "LE"

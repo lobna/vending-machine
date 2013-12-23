@@ -4,15 +4,22 @@ class Product
   attr_accessor :count, :name, :price
 
   def initialize (product)
-  	@name = product[:name]
-  	@count = product[:count]
-  	@price = product[:price]
+    @name = product[:name]
+    @count = product[:count]
+    @price = product[:price]
   end 
 end
 
 
 class Change
   attr_accessor :value, :count, :unit
+
+  def initialize (change)
+    @value = change[:value]
+    @count = change[:count]
+    @unit = change[:unit]
+  end 
+
 end
 
 class Transaction
@@ -26,7 +33,6 @@ class VendingMachine
   def start   
   
     load_machine  
-    @transactions ||= []
     loop do 
       welcome_message
       next  unless get_order
@@ -34,27 +40,34 @@ class VendingMachine
   end
 
   def load_machine
+    @transactions = []
     @products = []
+    @changes = []
     $products.each do |p|
       @products << Product.new(p)
     end 
+
+    $changes.each do |c|
+      @changes << Change.new(c)
+    end 
+
   end
 
   def welcome_message
-  	puts "Welcome to your vending machine this is our available products please select one"
-  	list_items
+    puts "Welcome to your vending machine this is our available products please select one"
+    list_items
   end
 
   def list_items
-  	i = bullet = 0
-  	@products.each do |obj|	
-  	  i += 1
-  	  if obj.count > 0
-  	    puts "#{i} - #{obj.name} ====> #{obj.price} LE  ========== Available (#{obj.count})pieces"
-  	  else
-  	    puts "#{i} - #{obj.name} ====> Not available"
-  	  end
-  	end
+    i = bullet = 0
+    @products.each do |obj| 
+      i += 1
+      if obj.count > 0
+        puts "#{i} - #{obj.name} ====> #{obj.price} LE  ========== Available (#{obj.count})pieces"
+      else
+        puts "#{i} - #{obj.name} ====> Not available"
+      end
+    end
   end
 
   def get_order
@@ -76,9 +89,11 @@ class VendingMachine
      return false
     end
    
-    pay(selected.price)  
-    get_piece(order-1)
-    @transactions << @current_transaction
+    success = pay(selected.price)  
+    if success
+      get_piece(order-1) 
+      @transactions << @current_transaction
+    end
   end
 
   def pay(price)
@@ -95,20 +110,45 @@ class VendingMachine
 
     if paid > price
       @current_transaction.returned_money = paid - price
-      get_changes(@current_transaction.returned_money)
-      puts "Pick your returned money #{@current_transaction.returned_money}"
+      success = get_changes(@current_transaction.returned_money)
+
+      if success
+        puts "Pick your returned money #{@current_transaction.returned_money}"
+      else
+       puts "No available changes please pick back your money, Sorry for that"
+       return false
+      end
     end
 
   end
 
   def get_piece(index)
- 	  @products[index].count -= 1
+    @products[index].count -= 1
     puts "Thank you for using out vending machine, Please pick and enjoy your #{@products[index].name} then press any button"
     any = gets
   end 
 
-  def get_changes(value)
+  def get_changes(return_value)
+    
+    @current_transaction.returned_money = [] 
+    @changes.reverse.each do |x|
+      next if x.count < 1  #bypass the finished changes
+       
+      if return_value >= x.value
+        until return_value < x.value       
+          return_value -= x.value
+          x.count -= 1
+          @current_transaction.returned_money << x.value
+          puts "return_value #{return_value} change value : #{x.value}"
+        end
+      end
+
+    end
+
+    return false  if return_value.to_i > 0 #no available changes
+    return true 
   end
+
 
 end
 
